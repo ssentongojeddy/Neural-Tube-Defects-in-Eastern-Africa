@@ -1,0 +1,415 @@
+---
+title: 'Birth Prevalence of Neural Tube Defects in East Africa: A Systematic Review and Meta-Analysis'
+author: 'Paddy Ssentongo MD, PhD'
+date: "02/22/2022"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+  html_notebook: default
+---
+
+
+# LOAD REQUIRED PACKAGES AND FUNCTIONS -----------------------------------------
+```{r, message=FALSE, echo=FALSE,warning=FALSE}
+
+library(ggplot2) 
+library(metafor) 
+library(meta) 
+library(tidyr)
+library(dplyr)
+library(ggrepel)
+library(ggpmisc)
+
+```
+
+
+```{r setup, include=FALSE,warning=FALSE,echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message = FALSE,warning =F)
+```
+
+
+
+# read data -----------------------------------------
+```{r,echo=FALSE,warning=FALSE}
+rm(list=ls())
+#data=read.csv("Subdural_Lit_Rev.csv")
+dat=read.csv("data/NTD_Meta77.csv")
+```
+
+
+# Meta-analysis using DL and logit transformation-----------------------------------------
+```{r,echo=FALSE,warning=FALSE}
+ntd <- metaprop(NTD, N, data = dat, studlab = paste(Author, Year_Publication,  sep = ", "), pscale = 10000, 
+               comb.fixed = F, method.ci = "CP", hakn=TRUE,
+               method.tau = "DL", method = "Inverse",sm = "PLOGIT")
+               #method.tau = "ML", method = "GLMM",sm = "PLOGIT")
+
+sb <- metaprop(spina.bifida, N, data = dat, studlab = paste(Author, Year_Publication,  sep = ", "), pscale = 10000, 
+               comb.fixed = F, method.ci = "CP",  hakn=TRUE,
+               method.tau = "DL", method = "Inverse",sm = "PLOGIT")
+               #method.tau = "ML", method = "GLMM",sm = "PLOGIT")
+
+enc<- metaprop(Encephalocele, N, data = dat, studlab = paste(Author, Year_Publication,  sep = ", "), pscale = 10000, 
+               comb.fixed = F, method.ci = "CP",  hakn=TRUE,
+               method.tau = "DL", method = "Inverse",sm = "PLOGIT")
+               #method.tau = "ML", method = "GLMM",sm = "PLOGIT")
+
+ane<- metaprop(anencephaly, N, data = dat, studlab = paste(Author, Year_Publication,  sep = ", "), pscale = 10000, 
+               comb.fixed = F, method.ci = "CP",  hakn=TRUE,
+               method.tau = "DL", method = "Inverse",sm = "PLOGIT")
+               #method.tau = "ML", method = "GLMM",sm = "PLOGIT")
+
+```
+
+
+#Influence analysis  using leave-one-out -----------------------------------------
+```{r, message=F,echo=FALSE,fig.height=5, fig.width=6, echo=FALSE,warning=FALSE}
+pdf("figs/SenstivityPlots.pdf", width = 10, height = 8)
+forest(metainf(ntd, pooled = "random"))
+dev.off()
+
+inf1=metainf(ntd, pooled = "random")# ntd
+inf2=metainf(sb, pooled = "random")# sb
+inf3=metainf(enc, pooled = "random") # enc
+inf4=metainf(ane, pooled = "random") # ane
+
+
+```
+#Influence analysis  using leave-one-out NTD-----------------------------------------
+```{r, message=F,echo=FALSE,fig.height=7, fig.width=10, echo=FALSE,warning=FALSE}
+forest(inf1,
+       leftlabs = c("Author"),
+       digits = 2,
+       col.by="black",
+       #sortvar = "TE",
+       squaresize=0.5,
+       col.square="blue",
+       col.diamond="maroon",
+       col.diamond.lines="maroon",
+       xlab="Birth Prevalence of Neural Tube Defects in East Africa (per 10,000 population)",
+       print.pval.Q = T,
+       digits.pval.Q=4,
+       print.tau2=F,
+       xlim = c(20, 60), at = c(20,30,40,50,60),pscale = 10000,
+       backtransf = T)
+
+```
+
+
+#Influence analysis  using leave-one-out SB-----------------------------------------
+
+```{r, message=F,echo=FALSE,fig.height=7, fig.width=10, echo=FALSE,warning=FALSE}
+forest(inf2,
+       leftlabs = c("Author"),
+       digits = 2,
+       col.by="black",
+       #sortvar = "TE",
+       squaresize=0.5,
+       col.square="blue",
+       col.diamond="maroon",
+       col.diamond.lines="maroon",
+       xlab="Birth Prevalence of Spina Bifida in East Africa (per 10,000 population)",
+       print.pval.Q = T,
+       digits.pval.Q=4,
+       print.tau2=F,
+       xlim = c(10, 40), at = c(10,20,30,40),pscale = 10000,
+       backtransf = T)
+
+```
+
+
+#Influence analysis  using leave-one-out EC-----------------------------------------
+
+
+```{r, message=F,echo=FALSE,fig.height=8, fig.width=10, echo=FALSE,warning=FALSE}
+forest(inf3,
+       leftlabs = c("Author"),
+       digits = 2,
+       col.by="black",
+       #sortvar = "TE",
+       squaresize=0.5,
+       col.square="blue",
+       col.diamond="maroon",
+       col.diamond.lines="maroon",
+       xlab="Birth Prevalence of Encephalocele in East Africa (per 10,000 population)",
+       print.pval.Q = T,
+       digits.pval.Q=4,
+       print.tau2=F,
+       xlim = c(1, 5), at = c(1,2,3,4),pscale = 10000,
+       backtransf = T)
+
+```
+#Influence analysis  using leave-one-out AN-----------------------------------------
+
+
+```{r, message=F,echo=FALSE,fig.height=7, fig.width=10, echo=FALSE,warning=FALSE}
+forest(inf4,
+       leftlabs = c("Author"),
+       digits = 2,
+       col.by="black",
+       #sortvar = "TE",
+       squaresize=0.5,
+       col.square="blue",
+       col.diamond="maroon",
+       col.diamond.lines="maroon",
+       xlab="Birth Prevalence of Anacephaly in East Africa (per 10,000 population)",
+       print.pval.Q = T,
+       digits.pval.Q=4,
+       print.tau2=F,
+       xlim = c(3, 14), at = c(3,5,10,14),pscale = 10000,
+       backtransf = T)
+
+```
+
+
+# Funnel plots : Prevalence -----------------------------------------
+```{r}
+
+pdf("figs/FunnelPlotFinalNTD.pdf", width = 8, height = 7)
+funnel(ntd,xlab = "log transformed proportions",studlab = F)
+dev.off()
+
+metabias(ntd, method="linreg")
+
+```
+
+# trim and fill : Incidence -----------------------------------------
+```{r,fig.height=5, fig.width=4, echo=FALSE,warning=FALSE}
+tf2 <- trimfill(ntd)
+summary(tf2)
+pdf("figs/Trimmed.pdf", width = 7, height = 7)
+funnel(tf2)
+dev.off()
+#funnel(tf2, pch = ifelse(tf2$trimfill, 1, 16),
+      # level = 0.90, comb.random = T,backtransf = T)
+#
+```
+
+```{r}
+tf3 <- trimfill(ntd)
+summary(ntd)
+
+```
+
+
+
+# Funnel plots : Incidence -----------------------------------------
+```{r,echo=FALSE,warning=FALSE}
+
+pdf("figs/FunnelPlot.pdf", width = 10, height = 10)
+funnel(ntd,xlab = "log transformed proportions",studlab = TRUE)
+dev.off()
+
+metabias(ntd, method="linreg")# Egger's 
+metabias(ntd, method="rank")# Begg's
+```
+
+# Descriptive trend
+```{r}
+dat=read.csv("data/NTD_Meta77.csv")
+formula <- y ~ x
+
+f <- dat %>%
+  arrange(desc(N)) %>%
+  ggplot(aes(x = Cohort_Year, y = rate_10000)) +
+  #ggplot(aes(x = Period, y = Rates, fill=Period))+  
+  #geom_smooth(se = F, method = "lm", size = 1.5) +
+  #geom_boxplot(show.legend = F)+
+  geom_point(aes(fill = Country,  size = N), shape = 21, alpha = .7) +
+    geom_smooth(method=lm , color="red", se=F, size=1.5, lty=1) +
+  colorblindr::scale_fill_OkabeIto(name = "Eastern Africa \n Country (UN)") +
+  scale_size(name = "Sample Size",
+             range = c(2, 10), breaks = c(10, 50)) +
+  annotate("text", label = "R^{2}==0.11~~p==0.08", x = 1989, y = 130, parse = T) +
+  geom_text_repel(aes(label = Country), size = 2.5) +
+  #expand_limits(x=c(1983,2018))+
+  scale_x_continuous(breaks=seq(1983,2018,5))+
+  scale_y_continuous(breaks=seq(0,120,10))+
+  facet_wrap(~ "Year of study") +
+  labs(x = "Year of study", y = "NTD Rates (per 10,000)")  +
+  guides(fill = guide_legend(override.aes = list(size = 3.5))) +
+  theme_bw(base_size = 14) +
+  theme(strip.text = element_text(face = "bold", size = 13))
+
+
+
+ggpubr::ggarrange(f, ncol = 1, common.legend = T, legend = "top")
+ggsave("figs/Fig5.pdf", width = 10, height = 8)
+
+dat$YEAR=dat$Cohort_Year
+model_A <- rma.glmm( xi=NTD, ni=N, measure="PLO",  mods = ~ YEAR, dat=dat)
+print(model_A,digits=3)
+model_A 
+round(exp(coef(summary(model_A))[-1,c("estimate", "ci.lb", "ci.ub")]), 2)
+
+
+
+```
+
+
+```{r}
+dat=read.csv("data/NTD_Meta77.csv")
+dat3 <- escalc(measure="PLO", xi=NTD, ni=N,data=dat)
+### mixed-effects meta-regression model 
+res <- rma(yi, vi, mods = ~ Cohort_Year, data=dat3)
+print(res, digits=3)
+round(exp(coef(summary(res))[-1,c("estimate", "ci.lb", "ci.ub")]), 2)
+
+
+```
+
+
+
+# Plot figure 2: Overall
+```{r,fig.height=9, fig.width=10, echo=FALSE,warning=FALSE}
+pdf("figs/Fig2.pdf", width = 9, height = 8)
+forest(ntd,
+       leftlabs = c("Author, Year", "Cases", "Sample size"),
+       digits = 2,
+       col.by="black",
+       #sortvar = Year_Publication,
+       sortvar = TE,
+       squaresize=0.5,
+       col.square="blue",
+       col.diamond="maroon",
+       col.diamond.lines="maroon",
+        xlab="Birth Prevalence of Neural Tube Defects in East Africa (per 10,000 population)",
+       print.pval.Q = T,
+       digits.pval.Q=4,
+       print.tau2=F,
+       xlim = c(0,70), at = c(0,10,20,30,40,50,60,70),pscale = 10000,
+       backtransf = T)
+dev.off()
+
+```
+
+
+# Plot figure 4: Country
+```{r,fig.height=15, fig.width=10, echo=FALSE,warning=FALSE}
+mw<- update(ntd, byvar=dat$Country,print.byvar=F)
+pdf("figs/Fig3.pdf", width = 10, height = 12)
+forest(mw,
+       leftlabs = c("Author, Year", "Cases", "Sample size"),
+       digits = 2,
+       col.by="black",
+       sortvar = Year_Publication,
+       squaresize=0.5,
+       col.square="blue",
+       col.diamond="maroon",
+       col.diamond.lines="maroon",
+         xlab="Birth Prevalence of Neural Tube Defects in East Africa (per 10,000 population)",
+       print.pval.Q = T,
+       digits.pval.Q=4,
+       print.tau2=F,
+       xlim = c(0,70), at = c(0,10,20,30,40,50,60,70),pscale = 10000,
+       backtransf = T)
+dev.off()
+
+```
+
+
+
+
+
+
+
+# Plot figure 3A: SB
+```{r,fig.height=9, fig.width=10, echo=FALSE,warning=FALSE}
+pdf("figs/fig4A.pdf", width = 9, height = 8)
+forest(sb,
+       leftlabs = c("Author, Year", "Cases", "Sample size"),
+       digits = 2,
+       col.by="black",
+       #sortvar = Year_Publication,
+       sortvar = TE,
+       squaresize=0.5,
+       col.square="blue",
+       col.diamond="maroon",
+       col.diamond.lines="maroon",
+        xlab="Birth Prevalence of Spina Bifida in East Africa (per 10,000 population)",
+       print.pval.Q = T,
+       digits.pval.Q=4,
+       print.tau2=F,
+       xlim = c(0,70), at = c(0,10,20,30,40,50,60,70),pscale = 10000,
+       backtransf = T)
+dev.off()
+
+```
+
+
+
+# Plot figure 3B: ANE
+```{r,fig.height=9, fig.width=10, echo=FALSE,warning=FALSE}
+dat=read.csv("data/NTD_Meta77.csv")
+
+l1=is.na(dat$anencephaly)
+dat=dat[!l1,]
+
+ane<- metaprop(anencephaly, N, data = dat, studlab = paste(Author, Year_Publication,  sep = ", "), pscale = 10000, 
+               comb.fixed = F, method.ci = "CP",  hakn=TRUE,
+               method.tau = "DL", method = "Inverse",sm = "PLOGIT")
+               #method.tau = "ML", method = "GLMM",sm = "PLOGIT")
+
+
+pdf("figs/Fig4B.pdf", width = 9, height = 7)
+forest(ane,
+       leftlabs = c("Author, Year", "Cases", "Sample size"),
+       digits = 2,
+       col.by="black",
+       #sortvar = Year_Publication,
+       sortvar = TE,
+       squaresize=0.5,
+       col.square="blue",
+       col.diamond="maroon",
+       col.diamond.lines="maroon",
+        xlab="Birth Prevalence of Anencephaly in East Africa (per 10,000 population)",
+       print.pval.Q = T,
+       digits.pval.Q=4,
+       print.tau2=F,
+       xlim = c(0,70), at = c(0,10,20,30,40,50,60,70),pscale = 10000,
+       backtransf = T)
+dev.off()
+
+```
+
+
+# Plot figure 3C: ENCEPHALOCELE
+```{r,fig.height=9, fig.width=10, echo=FALSE,warning=FALSE}
+dat=read.csv("data/NTD_Meta77.csv")
+
+l1=is.na(dat$Encephalocele)
+dat=dat[!l1,]
+
+enc<- metaprop(Encephalocele, N, data = dat, studlab = paste(Author, Year_Publication,  sep = ", "), pscale = 10000, 
+               comb.fixed = F, method.ci = "CP",  hakn=TRUE,
+               method.tau = "DL", method = "Inverse",sm = "PLOGIT")
+               #method.tau = "ML", method = "GLMM",sm = "PLOGIT")
+
+
+pdf("figs/Fig4C.pdf", width = 9, height = 5)
+forest(enc,
+       leftlabs = c("Author, Year", "Cases", "Sample size"),
+       digits = 2,
+       col.by="black",
+       #sortvar = Year_Publication,
+       sortvar = TE,
+       squaresize=0.5,
+       col.square="blue",
+       col.diamond="maroon",
+       col.diamond.lines="maroon",
+        xlab="Birth Prevalence of Encephalocele in East Africa (per 10,000 population)",
+       print.pval.Q = T,
+       digits.pval.Q=4,
+       print.tau2=F,
+       xlim = c(0,70), at = c(0,10,20,30,40,50,60,70),pscale = 10000,
+       backtransf = T)
+dev.off()
+
+```
+
+
+
+
+
+
